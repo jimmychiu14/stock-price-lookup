@@ -283,8 +283,8 @@
             }
             
             // 使用 CORS proxy 來繞過瀏覽器限制
-            const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const targetUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${queryCode}`);
+            const proxyUrl = 'https://corsproxy.io/?';
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${queryCode}`;
             
             try {
                 const response = await fetch(
