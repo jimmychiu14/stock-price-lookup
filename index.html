@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票查詢工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a1a2e;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #4a90d9;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: #4a90d9;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        
+        button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stock-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-bottom: 5px;
+        }
+        
+        .stock-code {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .price-row:last-child {
+            border-bottom: none;
+        }
+        
+        .price-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .price-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        
+        .price-value.up {
+            color: #e74c3c;
+        }
+        
+        .price-value.down {
+            color: #27ae60;
+        }
+        
+        .current-price {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .current-price .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .current-price .value {
+            font-size: 42px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        
+        .change {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .change.up {
+            color: #e74c3c;
+        }
+        
+        .change.down {
+            color: #27ae60;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            display: none;
+            padding: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .hint {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 股票查詢</h1>
+        
+        <div class="search-box">
+            <input type="text" id="stockCode" placeholder="輸入股票代碼 (如: 2330)" />
+            <button id="searchBtn" onclick="searchStock()">查詢</button>
+        </div>
+        
+        <div class="loading" id="loading">查詢中...</div>
+        <div class="error" id="error"></div>
+        
+        <div class="result" id="result">
+            <div class="stock-name" id="stockName"></div>
+            <div class="stock-code" id="stockCodeDisplay"></div>
+            
+            <div class="current-price">
+                <div class="label">現價</div>
+                <div class="value" id="price"></div>
+                <div class="change" id="change"></div>
+            </div>
+            
+            <div class="price-row">
+                <span class="price-label">開盤</span>
+                <span class="price-value" id="open"></span>
+            </div>
+            <div class="price-row">
+                <span class="price-label">最高</span>
+                <span class="price-value" id="high"></span>
+            </div>
+            <div class="price-row">
+                <span class="price-label">最低</span>
+                <span class="price-value" id="low"></span>
+            </div>
+            <div class="price-row">
+                <span class="price-label">昨收</span>
+                <span class="price-value" id="prevClose"></span>
+            </div>
+        </div>
+        
+        <div class="hint">支援台灣及美股查詢</div>
+    </div>
+    
+    <script>
+        // 支援按 Enter 鍵搜尋
+        document.getElementById('stockCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchStock();
+            }
+        });
+        
+        async function searchStock() {
+            const stockCode = document.getElementById('stockCode').value.trim();
+            if (!stockCode) return;
+            
+            const searchBtn = document.getElementById('searchBtn');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const result = document.getElementById('result');
+            
+            // 重置 UI
+            error.classList.remove('show');
+            result.classList.remove('show');
+            loading.classList.add('show');
+            searchBtn.disabled = true;
+            
+            // 處理股票代碼格式
+            let queryCode = stockCode;
+            if (!stockCode.includes('.') && !stockCode.endsWith('TW') && !stockCode.endsWith('TWO')) {
+                queryCode = stockCode + '.TW';
+            }
+            
+            try {
+                const response = await fetch(
+                    `https://query1.finance.yahoo.com/v8/finance/chart/${queryCode}`,
+                    {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    }
+                );
+                
+                const data = await response.json();
+                
+                if (!data.chart || !data.chart.result || !data.chart.result[0]) {
+                    throw new Error('找不到此股票');
+                }
+                
+                const resultData = data.chart.result[0];
+                const meta = resultData.meta;
+                const quote = resultData.indicators.quote[0];
+                
+                // 取得最後一個有效值
+                const getLast = (arr) => {
+                    if (!arr) return 0;
+                    for (let i = arr.length - 1; i >= 0; i--) {
+                        if (arr[i] !== null) return arr[i];
+                    }
+                    return 0;
+                };
+                
+                const price = meta.regularMarketPrice || 0;
+                const prevClose = meta.previousClose || 0;
+                const change = price - prevClose;
+                const changePercent = prevClose ? (change / prevClose * 100) : 0;
+                
+                // 更新 UI
+                document.getElementById('stockName').textContent = meta.shortName || meta.symbol;
+                document.getElementById('stockCodeDisplay').textContent = meta.symbol;
+                document.getElementById('price').textContent = price.toFixed(2);
+                
+                const changeEl = document.getElementById('change');
+                const sign = change >= 0 ? '+' : '';
+                changeEl.textContent = `${sign}${change.toFixed(2)} (${sign}${changePercent.toFixed(2)}%)`;
+                changeEl.className = 'change ' + (change >= 0 ? 'up' : 'down');
+                
+                document.getElementById('open').textContent = getLast(quote.open).toFixed(2);
+                document.getElementById('high').textContent = getLast(quote.high).toFixed(2);
+                document.getElementById('low').textContent = getLast(quote.low).toFixed(2);
+                document.getElementById('prevClose').textContent = prevClose.toFixed(2);
+                
+                // 設定漲跌顏色
+                document.getElementById('open').className = 'price-value ' + (getLast(quote.open) >= prevClose ? 'up' : 'down');
+                document.getElementById('high').className = 'price-value up';
+                document.getElementById('low').className = 'price-value down';
+                
+                result.classList.add('show');
+            } catch (err) {
+                error.textContent = err.message || '查詢失敗，請稍後再試';
+                error.classList.add('show');
+            } finally {
+                loading.classList.remove('show');
+                searchBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
