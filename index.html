@@ -282,9 +282,13 @@
                 queryCode = stockCode + '.TW';
             }
             
+            // 使用 CORS proxy 來繞過瀏覽器限制
+            const proxyUrl = 'https://api.allorigins.win/raw?url=';
+            const targetUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${queryCode}`);
+            
             try {
                 const response = await fetch(
-                    `https://query1.finance.yahoo.com/v8/finance/chart/${queryCode}`,
+                    proxyUrl + targetUrl,
                     {
                         headers: {
                             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
