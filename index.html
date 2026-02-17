@@ -248,6 +248,10 @@
                 <span class="price-label">昨收</span>
                 <span class="price-value" id="prevClose"></span>
             </div>
+            <div class="price-row">
+                <span class="price-label">🕐 資料時間</span>
+                <span class="price-value" id="timestamp"></span>
+            </div>
         </div>
         
         <div class="hint">支援台灣及美股查詢</div>
@@ -334,6 +338,15 @@
                 document.getElementById('high').textContent = getLast(quote.high).toFixed(2);
                 document.getElementById('low').textContent = getLast(quote.low).toFixed(2);
                 document.getElementById('prevClose').textContent = prevClose.toFixed(2);
+                
+                // 處理資料時間
+                const timestamp = meta.regularMarketTime;
+                if (timestamp) {
+                    const date = new Date(timestamp * 1000);
+                    document.getElementById('timestamp').textContent = date.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+                } else {
+                    document.getElementById('timestamp').textContent = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+                }
                 
                 // 設定漲跌顏色
                 document.getElementById('open').className = 'price-value ' + (getLast(quote.open) >= prevClose ? 'up' : 'down');
